@@ -211,6 +211,11 @@ gpu_frame_index :: () -> u32 {
     return current_swapchain_index;
 }
 
+swapchain_images: [..] VkImage;
+swapchain_textures: [..] Gpu_Texture;
+swapchain_views: [..] Gpu_Texture_View;
+current_swapchain_index: u32;
+
 #scope_module
 
 select_format :: (preferred_formats: [] Format) -> VkSurfaceFormatKHR {
@@ -473,10 +478,7 @@ gpu_frame_timeline: Gpu_Semaphore;
 cpu_frame_timeline: u64;
 
 // #todo: these should be made static with a hard cap.
-swapchain_images: [..] VkImage;
-swapchain_textures: [..] Gpu_Texture;
-swapchain_views: [..] Gpu_Texture_View;
-current_swapchain_index: u32;
+
 acquire_semaphore_index: u64;
 
 #if OS == .WINDOWS {

@@ -537,7 +537,7 @@ gpu_draw_indirect :: (cmd: Gpu_Command_Buffer, vertex_data: Gpu_Ptr, pixel_data:
     return .SUCCESS;
 }
 
-gpu_draw_indexed_indirect :: (cmd: Gpu_Command_Buffer, vertex_data: Gpu_Ptr, pixel_data: Gpu_Ptr, index_data: Gpu_Ptr, args: Gpu_Ptr) -> Gpu_Result {
+gpu_draw_indexed_indirect :: (cmd: Gpu_Command_Buffer, vertex_data: Gpu_Ptr, pixel_data: Gpu_Ptr, index_data: Gpu_Ptr, args: Gpu_Ptr, draw_count: u32) -> Gpu_Result {
     vk_cmd_buff := get_cmd_buff(cmd);
 
     vertex_offset := get_stage_offset(.VERTEX);
@@ -553,7 +553,7 @@ gpu_draw_indexed_indirect :: (cmd: Gpu_Command_Buffer, vertex_data: Gpu_Ptr, pix
     result2, indirect_buffer, indirect_offset := get_buffer_and_offset(args);
     return_if_error(result2);
 
-    vkCmdDrawIndexedIndirect(vk_cmd_buff, indirect_buffer, indirect_offset.(u64), 1, size_of(Gpu_Draw_Args));
+    vkCmdDrawIndexedIndirect(vk_cmd_buff, indirect_buffer, indirect_offset.(u64), draw_count, size_of(Gpu_Draw_Args));
 
     return .SUCCESS;
 }

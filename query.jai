@@ -6,7 +6,8 @@ Gpu_Timestamp :: struct {
 }
 
 gpu_init_timestamps :: (swapchain_image_count: s64) {
-    assert(timestamp_pools.count == 0 && swapchain_image_count > 0);
+    assert(timestamp_pools.count == 0);
+    assert(swapchain_image_count > 0);
     array_resize(*timestamp_pools, swapchain_image_count);
     for * timestamp_pools {
         create_info := VkQueryPoolCreateInfo.{

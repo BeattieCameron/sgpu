@@ -183,18 +183,18 @@ create_graphics_pipeline :: (shader_stages: [] VkPipelineShaderStageCreateInfo, 
         alphaToCoverageEnable = raster_desc.alpha_to_coverage.(VkBool32),
     };
 
-    assert(raster_desc.blend_state != null, "dynamic blend state is not yet implemented");
+    assert(raster_desc.blend_state.data != null, "dynamic blend state is not yet implemented");
     attachment_blend_states: [MAX_ATTACHMENTS] VkPipelineColorBlendAttachmentState;
     for 0..raster_desc.color_targets.count-1 {
         attachment_blend_states[it] = .{
             blendEnable = VK_TRUE,
-            srcColorBlendFactor = raster_desc.blend_state.src_color_factor.(VkBlendFactor),
-            dstColorBlendFactor = raster_desc.blend_state.dst_color_factor.(VkBlendFactor),
-            colorBlendOp = raster_desc.blend_state.color_op.(VkBlendOp),
-            srcAlphaBlendFactor = raster_desc.blend_state.src_alpha_factor.(VkBlendFactor),
-            dstAlphaBlendFactor = raster_desc.blend_state.dst_alpha_factor.(VkBlendFactor),
-            alphaBlendOp = raster_desc.blend_state.alpha_op.(VkBlendOp),
-            colorWriteMask = raster_desc.blend_state.color_write_mask.(VkColorComponentFlagBits),
+            srcColorBlendFactor = raster_desc.blend_state[it].src_color_factor.(VkBlendFactor),
+            dstColorBlendFactor = raster_desc.blend_state[it].dst_color_factor.(VkBlendFactor),
+            colorBlendOp = raster_desc.blend_state[it].color_op.(VkBlendOp),
+            srcAlphaBlendFactor = raster_desc.blend_state[it].src_alpha_factor.(VkBlendFactor),
+            dstAlphaBlendFactor = raster_desc.blend_state[it].dst_alpha_factor.(VkBlendFactor),
+            alphaBlendOp = raster_desc.blend_state[it].alpha_op.(VkBlendOp),
+            colorWriteMask = raster_desc.blend_state[it].color_write_mask.(VkColorComponentFlagBits),
         };
     }
 

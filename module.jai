@@ -434,7 +434,7 @@ Gpu_Raster_Desc :: struct {
     // Optional blend state baked into the pipeline.
     // else dynamic state.
     // blend state is duplicated to all color targets.
-    blend_state: *Gpu_Blend_Desc;
+    blend_state: [] Gpu_Blend_Desc;
 }
 
 Gpu_Texture_Desc :: struct {
@@ -467,7 +467,7 @@ Gpu_Draw_Args :: struct {
     index_count: u32;
     instance_count: u32;
     first_index: u32;
-    vertex_offset: s32;
+    vertex_offset: u32;
     first_instance: u32;
 }
 
@@ -1172,6 +1172,9 @@ create_device :: () -> Gpu_Result {
         device_features := VkPhysicalDeviceFeatures.{
             shaderInt64 = enable_feature(requested_optional_features, .SHADER_INT64),
             shaderInt16 = VK_TRUE,
+            multiDrawIndirect = VK_TRUE,
+            drawIndirectFirstInstance = VK_TRUE,
+            independentBlend = VK_TRUE,
         };
 
         create_info := VkDeviceCreateInfo.{
