@@ -3,6 +3,7 @@ MAX_TIMESTAMP_QUERIES :: 64;
 Gpu_Timestamp :: struct {
     pool_index: u32;   // which frame-in-flight pool this belongs to
     query_index: u32;  // index within that pool
+    valid: bool;
 }
 
 gpu_init_timestamps :: (swapchain_image_count: s64) {
@@ -31,16 +32,22 @@ gpu_cmd_timestamp_write :: (cmd: Gpu_Command_Buffer, stage: Stage) -> Gpu_Timest
     pool_index := cast(u32)(cpu_frame_timeline % timestamp_pools.count.(u64));
     pool := *timestamp_pools[pool_index];
 
+    if !pool.initialized {
+        vkCmdResetQueryPool(get_cmd_buff(cmd), pool.vk_pool, 0, MAX_TIMESTAMP_QUERIES);
+        pool.initialized = true;
+    }
+
     query_index := pool.next_query;
     assert(query_index < MAX_TIMESTAMP_QUERIES, "Exceeded MAX_TIMESTAMP_QUERIES (%) per frame", MAX_TIMESTAMP_QUERIES);
     pool.next_query += 1;
 
     vkCmdWriteTimestamp(get_cmd_buff(cmd), cast(VkPipelineStageFlagBits) stage, pool.vk_pool, query_index);
 
-    return .{ pool_index = pool_index, query_index = query_index };
+    return .{ pool_index = pool_index, query_index = query_index, valid = true };
 }
 
 gpu_timestamp_duration_ms :: (begin: Gpu_Timestamp, end: Gpu_Timestamp) -> (ready: bool, ms: float64) {
+    if !begin.valid || !end.valid then return false, 0.;
     if begin.pool_index != end.pool_index then return false, 0.;
 
     timestamps: [2] u64;
@@ -76,6 +83,7 @@ gpu_timestamp_duration_ms :: (begin: Gpu_Timestamp, end: Gpu_Timestamp) -> (read
 Timestamp_Pool :: struct {
     vk_pool: VkQueryPool;
     next_query: u32;
+    initialized: bool;
 }
 
 timestamp_pools: [..] Timestamp_Pool;
@@ -84,4 +92,5 @@ timestamps_reset :: (cmd: Gpu_Command_Buffer) {
     pool := *timestamp_pools[cpu_frame_timeline % timestamp_pools.count.(u64)];
     pool.next_query = 0;
     vkCmdResetQueryPool(get_cmd_buff(cmd), pool.vk_pool, 0, MAX_TIMESTAMP_QUERIES);
+    pool.initialized = true;
 }

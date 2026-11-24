@@ -360,6 +360,7 @@ Gpu_Optional_Features :: enum_flags {
     SHADER_ATOMIC_FLOATS             :: 1 << 9;
     SHADER_FLOAT16                   :: 1 << 10;
     UNIFORM_BUFFER_UPDATE_AFTER_BIND :: 1 << 11;
+    SHADER_DEMOTE_TO_HELPER_INVOCATION :: 1 << 12;
     
     // -- nyi --
     RAY_TRACING             ;
@@ -844,6 +845,11 @@ create_device :: () -> Gpu_Result {
             name = VK_EXT_SHADER_ATOMIC_FLOAT_EXTENSION_NAME,
         };
     }
+    if enable_feature(requested_optional_features, .SHADER_DEMOTE_TO_HELPER_INVOCATION) {
+        optional_extensions[Optional_Extension.SHADER_DEMOTE_TO_HELPER_INVOCATION] = .{
+            name = VK_EXT_SHADER_DEMOTE_TO_HELPER_INVOCATION_EXTENSION_NAME,
+        };
+    }
 
     result: VkResult;
 
@@ -1080,6 +1086,12 @@ create_device :: () -> Gpu_Result {
         }
     }
 
+    if enable_feature(requested_optional_features, .SHADER_DEMOTE_TO_HELPER_INVOCATION) {
+        if !is_optional_ext_supported(.SHADER_DEMOTE_TO_HELPER_INVOCATION) {
+            return .ERROR_MISSING_OPTIONAL_EXTENSION;
+        }
+    }
+
 
 
     // create the device:
@@ -1127,6 +1139,18 @@ create_device :: () -> Gpu_Result {
                 shaderSharedFloat32AtomicAdd = VK_TRUE,
             };
             chain = *shader_float_atomics;
+        }
+
+        if enable_feature(requested_optional_features, .SHADER_DEMOTE_TO_HELPER_INVOCATION) {
+            demote_features := VkPhysicalDeviceShaderDemoteToHelperInvocationFeatures.{};
+            supported_features := VkPhysicalDeviceFeatures2.{pNext = *demote_features};
+            vkGetPhysicalDeviceFeatures2(vk_physical_device, *supported_features);
+            if demote_features.shaderDemoteToHelperInvocation != VK_TRUE {
+                return .ERROR_MISSING_OPTIONAL_EXTENSION;
+            }
+
+            demote_features.pNext = chain;
+            chain = *demote_features;
         }
 
         vk12_features := VkPhysicalDeviceVulkan12Features.{
@@ -1290,6 +1314,7 @@ Optional_Extension :: enum {
     MESH_SHADERS      :: 1;
     SHADER_CLOCK      :: 2;
     SHADER_ATOMIC_FLOATS :: 3;
+    SHADER_DEMOTE_TO_HELPER_INVOCATION :: 4;
 }
 
 Optional_Extension_Info :: struct {
